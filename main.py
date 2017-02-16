@@ -18,6 +18,8 @@ import webapp2
 import os
 import jinja2
 
+from google.appengine.ext import db
+
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 
@@ -40,14 +42,60 @@ class Handler(webapp2.RequestHandler):
 
         self.write(self.render_str(template, **kw))
 
-class MainPage(Handler):
-    """Handles incoming requests to '/'"""
+class BlogPost(db.Model):
+    """Class to create BlogPost database"""
+
+    title = db.StringProperty(required=True)
+    post = db.StringProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    date = db.DateProperty(auto_now_add=True)
+
+class MainBlog(Handler):
+    """Handles incoming requests to '/blog' """
+
+    def render_mainblog(self, title="", post="", error="", date=""):
+        """Renders mainblog.html"""
+
+        posts = db.GqlQuery("SELECT * FROM BlogPost ORDER BY created DESC LIMIT 5")
+        self.render("mainblog.html", error=error, title=title, post=post, posts=posts, date=date)
 
     def get(self):
         """Handles incoming GET requests"""
 
-        self.render('base.html')
+        self.render_mainblog()
+
+
+class NewPost(Handler):
+    """Handles incoming requests to '/newpost' """
+
+    def render_newpost(self, title="", post="", error="", date=""):
+        """Renders newpost.html"""
+
+        posts = db.GqlQuery("SELECT * FROM BlogPost ORDER BY created DESC LIMIT 5")
+        self.render("newpost.html", error=error, title=title, post=post, posts=posts, date=date)
+
+    def get(self):
+        """Handles incoming get requests"""
+
+        self.render_newpost()
+
+    def post(self):
+        """Handles incoming post requests"""
+
+        title = self.request.get("title")
+        post = self.request.get("post")
+
+        if title and post:
+            entry = BlogPost(title=title, post=post)
+            entry.put()
+
+            self.redirect("/mainblog")
+        else:
+            error = "Please provide both a title and a post!"
+            self.render_newpost(title, post, error)
+    
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage)
+    ('/mainblog', MainBlog),
+    ('/newpost', NewPost)
 ], debug=True)
