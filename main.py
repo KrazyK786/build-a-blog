@@ -89,13 +89,32 @@ class NewPost(Handler):
             entry = BlogPost(title=title, post=post)
             entry.put()
 
-            self.redirect("/mainblog")
+            self.redirect("/blog/" + str(entry.key().id()))
         else:
             error = "Please provide both a title and a post!"
             self.render_newpost(title, post, error)
-    
+
+class ViewPostHandler(webapp2.RequestHandler):
+    """Dynamic handler for dealing with new post pages"""
+
+    def renderError(self, error):
+        """ Sends an HTTP error code and a generic "oops!" message to the client. """
+
+        self.response.write(error)
+
+    def get(self, id):
+        """Hanldes get requests for new post pages"""
+
+        # post = db.GqlQuery("SELECT * FROM BlogPost WHERE ID = '%s'", % id)
+        post = BlogPost.get_by_id(int(id))
+
+        if not post:
+            self.renderError("Error: That Post Does Not Exist!!")
+        else:
+            self.response.write(post.post)
 
 app = webapp2.WSGIApplication([
     ('/mainblog', MainBlog),
-    ('/newpost', NewPost)
+    ('/newpost', NewPost),
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
