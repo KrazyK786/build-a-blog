@@ -94,7 +94,7 @@ class NewPost(Handler):
             error = "Please provide both a title and a post!"
             self.render_newpost(title, post, error)
 
-class ViewPostHandler(webapp2.RequestHandler):
+class ViewPostHandler(Handler):
     """Dynamic handler for dealing with new post pages"""
 
     def renderError(self, error):
@@ -105,13 +105,12 @@ class ViewPostHandler(webapp2.RequestHandler):
     def get(self, id):
         """Hanldes get requests for new post pages"""
 
-        # post = db.GqlQuery("SELECT * FROM BlogPost WHERE ID = '%s'", % id)
         post = BlogPost.get_by_id(int(id))
 
         if not post:
             self.renderError("Error: That Post Does Not Exist!!")
         else:
-            self.response.write(post.post)
+            self.render("completedpost.html", post=post)
 
 app = webapp2.WSGIApplication([
     ('/mainblog', MainBlog),
