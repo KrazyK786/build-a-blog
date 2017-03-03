@@ -51,7 +51,7 @@ class BlogPost(db.Model):
     date = db.DateProperty(auto_now_add=True)
 
 class MainBlog(Handler):
-    """Handles incoming requests to '/blog' """
+    """Handles incoming requests to '/mainblog' """
 
     def render_mainblog(self, title="", post="", error="", date=""):
         """Renders mainblog.html"""
